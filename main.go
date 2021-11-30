@@ -3,29 +3,41 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"mime/multipart"
 	"net/http"
 	"os"
+	"path/filepath"
 )
 
+// /Users/mingky/golang-image-uploader/uploader "http://localhost:3000/upload"
 func main() {
-	args := os.Args[1:]
+	serverURL := os.Args[1]
+	args := os.Args[2:]
 
-	for _, file := range args {
-		byteArray, err := ioutil.ReadFile(file)
-		if err != nil {
-			return
-		}
-		res, err := http.Post("http://localhost:3000/upload", "image/png", bytes.NewReader(byteArray))
-		if err != nil {
+	for _, filePath := range args {
+		file, _ := os.Open(filePath)
+		defer file.Close()
+
+		body := &bytes.Buffer{}
+		writer := multipart.NewWriter(body)
+		part, _ := writer.CreateFormFile("file", filepath.Base(file.Name()))
+		io.Copy(part, file)
+		writer.Close()
+
+		r, _ := http.NewRequest("POST", serverURL, body)
+		r.Header.Add("Content-Type", writer.FormDataContentType())
+		client := &http.Client{}
+		respone,err := client.Do(r)
+		if err != nil{
 			fmt.Println(err)
 		}
-		defer res.Body.Close()
-		bodyByteArray, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			fmt.Println("Error")
+		bodyBytes, err := ioutil.ReadAll(respone.Body)
+		if err != nil{
+			fmt.Println(err)
 		}
-		str := string(bodyByteArray)
+		str := string(bodyBytes)
 		fmt.Println(str)
 	}
 }
