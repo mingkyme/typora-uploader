@@ -11,8 +11,14 @@ import (
 	"path/filepath"
 )
 
-// /Users/mingky/golang-image-uploader/uploader "http://localhost:3000/upload"
+// typora-uploader http://upload.com a.jpg
 func main() {
+	if len(os.Args) <= 1 {
+		fmt.Println("need arguments")
+		fmt.Println("example: typora-uploader http://upload.com a.jpg")
+		fmt.Println("check https://github.com/mingkyme/typora-uploader")
+		return
+	}
 	serverURL := os.Args[1]
 	args := os.Args[2:]
 
@@ -29,12 +35,12 @@ func main() {
 		r, _ := http.NewRequest("POST", serverURL, body)
 		r.Header.Add("Content-Type", writer.FormDataContentType())
 		client := &http.Client{}
-		respone,err := client.Do(r)
-		if err != nil{
+		respone, err := client.Do(r)
+		if err != nil {
 			fmt.Println(err)
 		}
 		bodyBytes, err := ioutil.ReadAll(respone.Body)
-		if err != nil{
+		if err != nil {
 			fmt.Println(err)
 		}
 		str := string(bodyBytes)
